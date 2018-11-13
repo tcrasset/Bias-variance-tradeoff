@@ -1,0 +1,217 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+
+\title{Machine Learning - Project 2 Bias variance tradeoff}
+\author{Tom Crasset}
+\date{November 2018}
+
+\documentclass[12pt]{article}
+%------------------------------Packages généraux------------------------------
+
+\usepackage[french]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{ae}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[a4paper,left=2.5cm,right=2.5cm,top=2cm,bottom=3cm]{geometry}
+%------------------------------Mathématiques------------------------------
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{amsfonts}
+\usepackage{eucal}
+\usepackage{array}
+
+
+%------------------------------Graphics------------------------------
+
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{graphicx}
+\usepackage{fancyhdr}
+\usepackage{fancybox}
+\usepackage{color}
+\usepackage{epstopdf}
+\usepackage{float}
+\usepackage{diagbox}
+\usepackage{svg}
+
+%------------------------------Syntaxe------------------------------
+
+\usepackage{listings}
+\usepackage{color} %red, green, blue, yellow, cyan, magenta, black, white
+\definecolor{mygreen}{RGB}{28,172,0} % color values Red, Green, Blue
+\definecolor{mylilas}{RGB}{170,55,241}
+\lstloadlanguages{Matlab}
+
+\def\refmark#1{\hbox{$^{\ref{#1}}$}}
+\DeclareSymbolFont{cmmathcal}{OMS}{cmsy}{m}{n} %Mathcal correcte
+\DeclareSymbolFontAlphabet{\mathcal}{cmmathcal}
+
+\setlength{\parskip}{1ex plus 0.5ex minus 0.2ex}
+\newcommand{\hsp}{\hspace{20pt}}
+\newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
+
+
+\begin{document} 
+\begin{titlepage}
+
+
+  \begin{sffamily}
+  \begin{center}
+
+   
+    \textsc{\Large University of Liège}\\[0.8cm]
+    
+    \begin{figure}[h!]
+		\begin{center}
+		\includegraphics[scale=0.8]{logo_ulg.jpg}\\[1cm]
+		\end{center}
+	\end{figure}
+	
+
+    \textsc{\Large Machine Learning}\\[1.1cm]
+
+    
+    \HRule \\[0.4cm]
+    { \LARGE \bfseries Bias variance tradeoff\\[0.4cm] }
+
+    \HRule \\[0.5cm]
+    
+    \textsc{Master 1 in Data Science \& Engineering} \\[2.5cm]
+
+   \begin{minipage}{0.4\textwidth}
+      \begin{flushleft} \large
+        \emph{Authors:}\\
+        Tom \textsc{Crasset}\\
+        Antoine \textsc{Louis} 
+      \end{flushleft}
+    \end{minipage}
+    \begin{minipage}{0.4\textwidth}
+      \begin{flushright} \large
+        \emph{Professors :}\\
+        L. \textsc{Wehenkel}\\
+        P. \textsc{Geurts}\\
+
+      \end{flushright}
+    \end{minipage}
+    
+
+
+    \vfill
+
+    
+    {\large Academic year 2018-2019}
+
+  \end{center}
+  \end{sffamily}
+\end{titlepage}
+
+
+\section{Question 1}
+All naive Bayes classifiers assume that the value of a given feature is independent of the value of another feature, inside a given class.
+The Bayes probabilistic model is a conditional probability model
+The model variables are the class probability $\mathcal{X} \in (\pm 1)$ drawn uniformly.
+Given a dataset of samples to be classified, each sample being represented by the feature vector \\
+~
+\begin{math}
+\boldsymbol{x} = (x_0, x_1)
+\end{math}
+, the probability of a sample belonging to $y$ is 
+\begin{math}
+ p(y \mid \boldsymbol{x})
+\end{math}
+for $y \in \mathcal{X}$. \\
+A common rule when trying to classify samples is to assign the class label that has the highest probability, i.e.
+\begin{equation*}
+    \hat {y}={\underset {k\in \{1,\dots ,K\}}{\operatorname {argmax} }}\ p(y \mid \boldsymbol{x})
+\end{equation*}
+
+
+\noindent This probability can be computed using the Bayes Theorem (Eq \ref{Eq:bayestheorem})
+\begin{equation}
+ p(y \mid \boldsymbol{x}) = \frac {p(y)\ p(\boldsymbol{x} \mid y)}{p(\boldsymbol{x}) }
+\label{Eq:bayestheorem}
+\end{equation}
+
+% \noindent $P(y) = 0.5$ by construction.
+% \begin{equation*}
+%  p(y \mid \boldsymbol{x}) = \frac {p(\boldsymbol{x} \mid y)}{p(\boldsymbol{x}) }
+% \end{equation*}
+% because the classes are equiprobable by construction.
+
+
+\noindent $p(\boldsymbol{x} \mid y)$ follows a class dependant gaussian distribution (Eq \ref{Eq:multivgaussian})
+
+\noindent 
+\begin{equation}
+    p(\boldsymbol{x} \mid y)={\frac {1}{(2\pi )^{N/2}\left|{\boldsymbol {\Sigma }}\right|^{1/2}}}\;\;e^{-{\frac {1}{2}}\left({\boldsymbol {x}}-{\boldsymbol {\mu }}\right)^{\top }{\boldsymbol {\Sigma }}^{-1}\left({\boldsymbol {x}}-{\boldsymbol {\mu }}\right)}
+    \label{Eq:multivgaussian}
+\end{equation}
+
+\noindent with the mean and covariance matrices being as follows
+\[   
+     \begin{cases}
+        \boldsymbol{\mu^-} = (0,0) \text{ and }
+        \boldsymbol{\Sigma^-} =
+       \begin{pmatrix} 
+            1 & 0 \\
+            0 & 1
+        \end{pmatrix} 
+        &\quad\text{if }  y = - 1\\
+        \boldsymbol{\mu^+} = (0,0) \text{ and }
+        \boldsymbol{\Sigma^+} =
+       \begin{pmatrix} 
+            2 & 0 \\
+            0 & 1/2
+        \end{pmatrix} 
+         &\quad\text{if }  y = + 1
+     \end{cases}
+\]
+
+
+\noindent 
+The denominator of Eq\ref{Eq:bayestheorem} is called the evidence and it is a constant for all classes because it does no depend on the classes and the features are known, effectively making the whole denominator a constant and can thus be disregarded when building the Bayes Model.
+The numerator is thus equivalent to the joint probability $p(y \mid x_{1}, x_{0})$ and can be written as follows, using the chain rule :
+\begin{equation}
+ \begin{aligned}
+ p(y \mid x_{1}, x_{0})
+ &=p(x_{0} ,x_{1},y)\\
+ &=p(x_{0}\mid x_{1}, y)\ p(x_{1},y)\\
+ &=p(x_{0}\mid x_{1}, y)\ p(x_{1} \mid y)\ p(y)\\
+ \end{aligned}
+\end{equation}
+
+\noindent Given the conditional independence hypothesis, the above can be written concisely as
+
+\begin{equation*}
+p(y \mid x_{1}, x_{0}) = \frac{1}{Z}p(x_0 \mid y)\ p(x_1 \mid y)\ p(y)
+\end{equation*}
+\noindent 
+with 
+\begin{equation*}
+Z = \sum_{k} p(y) P(x_0,x_1 \mid y)
+\end{equation*}
+being the evidence and as stated just before is constant and can be disregarded. The model can then be summarized by this last equation :
+
+\begin{equation}
+    \hat {y}={\underset {k\in \{1,\dots ,K\}}{\operatorname {argmax} }}\ p(y)p(x_0 \mid y)p(x_1 \mid y)
+    \label{Eq:bayesmodel}
+\end{equation}
+
+
+The loss function  is some function computing the difference between the estimated and true values for a sample. For a classifier, it is simply checking if the predicated class label $\hat{y}$ matches the real class $y$.
+The zero-one loss function $L(\hat{y}, y)$ is equal to 0 if the two match, 1 otherwise. Formally,
+
+$$L(\hat{y}, y) = \boldsymbol{I}(\hat{y} \ne y), $$
+Let \textit{D} be a probability distribution on $\mathcal{X}$ and let $ S =((x_0^{(0)},x_1^{(0)}), \dots, (x_0^{(n)},x_1^{(n)}))$ be a training sample containing $n$ labeled examples drawn i.i.d from D.
+
+Let's say we learn the classifier on S and observe its trainign error using the zero-one loss:
+$$   Err_{S}^{0-1}} = \frac{1}{n}\ \sum_{i=1}^{n} \boldsymbol{I}(h_b(x_0^{(i)}, x_1^{(i)}) \ne y) $$
+
+The generalization error of the
+models is the error that would result if we trained an algorithm on several different training samples S :
+$$   Err_{D}^{0-1}} = \boldsymbol{E}_{x_0, x_1,y}\ [\boldsymbol{I}(y \ne h_b(x_0^{(i)}, x_1^{(i)})] $$
+
+\end{document}
