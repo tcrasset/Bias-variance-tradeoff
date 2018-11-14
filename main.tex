@@ -1,10 +1,6 @@
 \documentclass{article}
 \usepackage[utf8]{inputenc}
 
-\title{Machine Learning - Project 2 Bias variance tradeoff}
-\author{Tom Crasset}
-\date{November 2018}
-
 \documentclass[12pt]{article}
 %------------------------------Packages généraux------------------------------
 
@@ -109,27 +105,33 @@
 \end{titlepage}
 
 
-\section{Question 1}
+\section{Theoretical questions}
+\subsection{Bayes model and residual error in classification}
+\subsubsection{Analytical formulation of the Bayes model \textit{$h_b(x_0,x_1)$} associated to the zero-one error
+loss}
+
+\subsubsection*{Theoretical reasoning}
 All naive Bayes classifiers assume that the value of a given feature is independent of the value of another feature, inside a given class.
 The Bayes probabilistic model is a conditional probability model
-The model variables are the class probability $\mathcal{X} \in (\pm 1)$ drawn uniformly.
+
 Given a dataset of samples to be classified, each sample being represented by the feature vector \\
 ~
 \begin{math}
-\boldsymbol{x} = (x_0, x_1)
+\boldsymbol{x} = (x_0, x_1, \dots, x_n)
 \end{math}
 , the probability of a sample belonging to $y$ is 
 \begin{math}
  p(y \mid \boldsymbol{x})
 \end{math}
-for $y \in \mathcal{X}$. \\
+for $y \in \mathcal{Y}$. \\
 A common rule when trying to classify samples is to assign the class label that has the highest probability, i.e.
 \begin{equation*}
-    \hat {y}={\underset {k\in \{1,\dots ,K\}}{\operatorname {argmax} }}\ p(y \mid \boldsymbol{x})
+    \hat {y}={\underset {y\ \in\  \mathcal{Y}}{\operatorname {argmax} }}\ p(y \mid \boldsymbol{x})
+    \label{Eq:commonclassifier}
 \end{equation*}
 
 
-\noindent This probability can be computed using the Bayes Theorem (Eq \ref{Eq:bayestheorem})
+\noindent This probability can be computed using the Bayes Theorem (\ref{Eq:bayestheorem})
 \begin{equation}
  p(y \mid \boldsymbol{x}) = \frac {p(y)\ p(\boldsymbol{x} \mid y)}{p(\boldsymbol{x}) }
 \label{Eq:bayestheorem}
@@ -142,7 +144,7 @@ A common rule when trying to classify samples is to assign the class label that 
 % because the classes are equiprobable by construction.
 
 
-\noindent $p(\boldsymbol{x} \mid y)$ follows a class dependant gaussian distribution (Eq \ref{Eq:multivgaussian})
+\noindent $p(\boldsymbol{x} \mid y)$ follows a class dependant gaussian distribution ( \ref{Eq:multivgaussian})
 
 \noindent 
 \begin{equation}
@@ -150,17 +152,84 @@ A common rule when trying to classify samples is to assign the class label that 
     \label{Eq:multivgaussian}
 \end{equation}
 
-\noindent with the mean and covariance matrices being as follows
+\noindent with $N$ the number of attributes and $\boldsymbol{\mu}$, $\boldsymbol{\Sigma}$ being the mean and the covariance matrix respectively.
+
+
+\noindent 
+The denominator of (\ref{Eq:bayestheorem}) is called the evidence and it is a constant for all classes because it does not depend on the classes and the features are known, effectively making the whole denominator a constant and can thus be disregarded when building the Bayes Model.
+The numerator is thus equivalent to the joint probability $p(y, x_{1},\dots , x_{n})$ and can be written as follows, using the chain rule :
+\begin{equation}
+ \begin{aligned}
+p(y, x_{1},\dots , x_{n}) &=p(x_{1},\dots ,x_{n},y)\\
+ &=p(x_{1}\mid x_{2},\dots ,x_{n},y)p(x_{2},\dots ,x_{n},y)\\
+ &=p(x_{1}\mid x_{2},\dots ,x_{n},y)p(x_{2}\mid x_{3},\dots ,x_{n},y)p(x_{3},\dots ,x_{n},y)\\
+ &=\dots \\
+ &=p(x_{1}\mid x_{2},\dots ,x_{n},y)p(x_{2}\mid x_{3},\dots ,x_{n},y)\dots p(x_{n-1}\mid x_{n},y)p(x_{n}\mid y)p(y) \\
+ \end{aligned}
+ \label{Eq:chainrule}
+\end{equation}
+
+\noindent Given the conditional independence hypothesis, we have :
+
+\begin{equation}
+    p(x_{i}\mid x_{i+1},\dots ,x_{n},y)=p(x_{i}\mid y)
+    \label{Eq:conditionalindependence}
+\end{equation}
+The joint model $p(y \mid x_{1},\dots , x_{n})$  is proportional to $p(y, x_{1},\dots , x_{n})$ and so it can be written concisely using (\ref{Eq:chainrule}) and (\ref{Eq:conditionalindependence})  as
+
+\begin{equation}
+\begin{aligned}p(y\mid x_{1},\dots ,x_{n})&= p(y)\ p(x_{1}\mid y)\ p(x_{2}\mid y)\ p(x_{3}\mid y)\ \cdots \\
+&=p(y)\prod _{i=1}^{n}p(x_{i}\mid y)\,
+\end{aligned}
+\label{Eq:probaposteriori}
+\end{equation}
+\noindent 
+and the conditional distribution over $y$ can be written as :
+\begin{equation}
+\begin{aligned}p(y\mid x_{1},\dots ,x_{n})&=  \frac{1}{Z} p(y)\prod _{i=1}^{n}p(x_{i}\mid y)
+\end{aligned}
+\end{equation}
+with 
+\begin{equation*}
+Z = \sum_{k} p(y) P(\boldsymbol{x} \mid y)
+\end{equation*}
+being the evidence and as stated just before is constant and can be disregarded. The naive bayes classifier can then be summarized by this last equation :
+
+\begin{equation}
+    \hat {y}={\underset {y\ \in\  \mathcal{Y}}{\operatorname {argmax} }}\ p(y)\prod _{i=1}^{n}p(x_{i}\mid y)
+    \label{Eq:bayesmodel}
+\end{equation}
+
+
+
+\subsubsection*{Analytical formulation}
+
+
+\noindent
+Now the previous theoretical equations can be applied to the analytical formulation of the model.
+Our model has two variables $(x_0,x_1)$.
+
+We have the class dependant probability distributions follow a Gaussian distribution described in (\ref{Eq:multivgaussian}) :
+\begin{equation}
+    p(\boldsymbol{x} \mid y = + 1)={\frac {1}{2\pi \left|{\boldsymbol {\Sigma^+ }}\right|^{1/2}}}\;\;e^{-{\frac {1}{2}}\left({\boldsymbol {x}}-{\boldsymbol {\mu^+ }}\right)^{\top }{\boldsymbol {\Sigma^+ }}^{-1}\left({\boldsymbol {x}}-{\boldsymbol {\mu^+ }}\right)}
+\end{equation}
+
+\begin{equation}
+    p(\boldsymbol{x} \mid y = -1)={\frac {1}{2\pi \left|{\boldsymbol {\Sigma^- }}\right|^{1/2}}}\;\;e^{-{\frac {1}{2}}\left({\boldsymbol {x}}-{\boldsymbol {\mu^- }}\right)^{\top }{\boldsymbol {\Sigma^- }}^{-1}\left({\boldsymbol {x}}-{\boldsymbol {\mu^- }}\right)}
+\end{equation}
+
+
+with the mean and covariance matrices being as follows
 \[   
      \begin{cases}
-        \boldsymbol{\mu^-} = (0,0) \text{ and }
+        \boldsymbol{\mu^-} = (x_0, x_1) = (0,0) \text{ and }
         \boldsymbol{\Sigma^-} =
        \begin{pmatrix} 
             1 & 0 \\
             0 & 1
         \end{pmatrix} 
         &\quad\text{if }  y = - 1\\
-        \boldsymbol{\mu^+} = (0,0) \text{ and }
+        \boldsymbol{\mu^+} = (x_0, x_1) = (0,0) \text{ and }
         \boldsymbol{\Sigma^+} =
        \begin{pmatrix} 
             2 & 0 \\
@@ -171,47 +240,114 @@ A common rule when trying to classify samples is to assign the class label that 
 \]
 
 
-\noindent 
-The denominator of Eq\ref{Eq:bayestheorem} is called the evidence and it is a constant for all classes because it does no depend on the classes and the features are known, effectively making the whole denominator a constant and can thus be disregarded when building the Bayes Model.
-The numerator is thus equivalent to the joint probability $p(y \mid x_{1}, x_{0})$ and can be written as follows, using the chain rule :
+As such, we can compute the indivual probability distribution of each attribute given a class :
 \begin{equation}
- \begin{aligned}
- p(y \mid x_{1}, x_{0})
- &=p(x_{0} ,x_{1},y)\\
- &=p(x_{0}\mid x_{1}, y)\ p(x_{1},y)\\
- &=p(x_{0}\mid x_{1}, y)\ p(x_{1} \mid y)\ p(y)\\
- \end{aligned}
+p(x_0 \mid y = -\ 1) = \frac{1}{\sqrt{2\pi}}\ e^{- \frac{x_0^2}{2}}
+\end{equation}
+\begin{equation}
+p(x_1 \mid y = -\ 1) = \frac{1}{\sqrt{2\pi}}\ e^{- \frac{x_1^2}{2}}
+\end{equation}
+\begin{equation}
+p(x_0 \mid y = +1) = \frac{1}{2\sqrt{2\pi}}\ e^{- \frac{x_0^2}{8}}
+\end{equation}
+\begin{equation}
+p(x_1 \mid y = +1)  = \frac{2}{\sqrt{2\pi}}\ e^{-2x_1^2}
 \end{equation}
 
-\noindent Given the conditional independence hypothesis, the above can be written concisely as
+Assuming the variables $(x_0, x_1)$ are conditionaly independent, the joint probability can be decomposed according to (\ref{Eq:probaposteriori}) :
+\begin{equation}
+    p(\boldsymbol{x} \mid y = -\ 1) = p(x_0 \mid y = -\ 1)\ p(x_1 \mid y = -\ 1) = \frac{1}{2\pi}\ e^{-\frac{1}{2}(x_0^2 + x_1^2)}
+\label{Eq:priorminus}
+\end{equation}
+\begin{equation}
+    p(\boldsymbol{x} \mid y = + 1) = p(x_0 \mid y = + 1)\ p(x_1 \mid y = + 1) = \frac{1}{2\pi}\ e^{-\frac{1}{8}(x_0^2 + 16x_1^2)}
+\label{Eq:priorplus}
+\end{equation}
 
-\begin{equation*}
-p(y \mid x_{1}, x_{0}) = \frac{1}{Z}p(x_0 \mid y)\ p(x_1 \mid y)\ p(y)
-\end{equation*}
-\noindent 
-with 
-\begin{equation*}
-Z = \sum_{k} p(y) P(x_0,x_1 \mid y)
-\end{equation*}
-being the evidence and as stated just before is constant and can be disregarded. The model can then be summarized by this last equation :
+When classifying samples, the sample is assigned the class label with the highest probability, thus the evidence $p(\boldsymbol{x})$ does not matter as it scales both posteriors equally and we just need to see when, for example, 
+\begin{equation}
+    p(y = + 1  \mid \boldsymbol{x}) > p(y = -\ 1  \mid \boldsymbol{x})
+    \label{Eq:higherposterior}
+\end{equation}
+
+The class probability $\mathcal{Y} \in (\pm 1)$ are drawn uniformaly :
+\begin{equation}
+    p(y = + 1) = p(y = -\ 1) = 0.5
+\end{equation} and thus they can be dropped as well from (\ref{Eq:bayestheorem})
+
+Then, we can replace the posteriors from (\ref{Eq:higherposterior}) with the priors from (\ref{Eq:priorminus}) and (\ref{Eq:priorplus})  
 
 \begin{equation}
-    \hat {y}={\underset {k\in \{1,\dots ,K\}}{\operatorname {argmax} }}\ p(y)p(x_0 \mid y)p(x_1 \mid y)
-    \label{Eq:bayesmodel}
+\begin{aligned}
+    p(y = + 1  \mid \boldsymbol{x}) > p(y = -\ 1  \mid \boldsymbol{x}) &\Leftrightarrow  p(\boldsymbol{x} \mid y = + 1 > p(\boldsymbol{x} \mid y = -\ 1) \\
+    &\Leftrightarrow \frac{1}{2\pi}\ e^{-\frac{1}{8}(x_0^2 + 16x_1^2)} > \frac{1}{2\pi}\ e^{-\frac{1}{2}(x_0^2 + x_1^2)} \\
+    &\Leftrightarrow - \frac{1}{8}(x_0^2 + 16x_1^2) > -\frac{1}{2} (x_0^2 +x_1^2)\\
+    &\Leftrightarrow x_0^2 > 4x_1^2 \\
+    &\Leftrightarrow x_0 > 2x_1 \text{ or } x_0 < -\ 2x_1
+\end{aligned}
+\label{Eq:threshold}
+\end{equation}
+
+Finally, the analytical formulation of the model is as follows:
+\[
+\textit{$h_b(x_0, x_1)$} =
+\begin{cases}
+    $+1$ \text{, if } x_0 > 2x_1 \text{ or } x_0 < -\ 2x_1\\
+    $-\ 1$ \text{, otherwise}
+\end{cases} 
+\]
+
+
+
+
+The loss function  is some function computing the difference between the estimated and true values for a sample. For a classifier, it is simply checking if the predicated class label $\hat{y}$ matches the real class $y$. For that, the zero-one loss function $L^{0-1}(\hat{y}, y)$ is perfect as it is equal to 0 if the two match, 1 otherwise. Formally,
+
+\[
+L^{0-1}(\hat{y}, y) =
+\begin{cases}
+    $1$ \text{, if } y \ne \hat{y}\\
+    $0$ \text{, otherwise}
+\end{cases} 
+\]
+
+
+\subsubsection{Estimation of the generalization error of the Bayes model \textit{$h_b(x_0, x_1)$}}
+
+The generalization error can't be explicitely computed as it would require knowing future data, which is impossible. However, we can approximate it by considering all possible inputs.
+The error associated to one sample is not clear cut, it is proportional to the strength of the prediction, that is on the joint probability $p(x_0,x_1,\hat{y})$.
+For example, if the prediction is certain ($p(x_0,x_1,\hat{y}) = 1$) then the error is $0$ and when the prediction is completely wrong, the error is $1$.
+If it is in between, the error is one minus the probability of the prediciton, so if $p(x_0,x_1,\hat{y}) = 0.3$ then the error is $0.7$
+
+Formally for one sample, 
+\begin{equation}
+    Err^{0-1}(x_0,x_1,y) = p(x_0,x_1,y = 1)\textbf{1}(\hat{y} \ne 1) + p(x_0,x_1,y =-\ 1)\textbf{1}(\hat{y} \ne -\ 1)
+    \label{Eq:sampleerror}
+\end{equation}
+
+Now let's consider all the possible input values. As the input is continuous, $x_0$ and $x_1$ have to be integrated over $\mathbb{R}$.
+Thus, the sample error (\ref{Eq:sampleerror}) is integrated with $x_0$ and $x_1$ ranging from $-\ \infty$ to $+\infty$.
+It follows:
+\begin{equation}
+    E_{x_0, x_1}\{L(y,h_b(x_0,x_1)\} =  \int_{-\infty}^{+\infty} \int_{-\infty}^{+\infty}p(x_0,x_1,y = 1)\textbf{1}(\hat{y} \ne 1) + p(x_0,x_1,y =-\ 1)\textbf{1}(\hat{y} \ne -\ 1) dx_0 dx_1
+\label{Eq:residualerrorstep0}
+\end{equation}
+
+The joint probability $p(\boldsymbol{x}, y)$ can be replaced by $p(y)p(\boldsymbol{x} \mid y)$ which have been computed in (\ref{Eq:priorminus}) and (\ref{Eq:priorplus}).
+
+Inserting (\ref{Eq:priorminus}) and (\ref{Eq:priorplus}) into (\ref{Eq:residualerrorstep0}) results in:
+
+\begin{equation}
+\begin{aligned}
+    E_{x_0, x_1}\{L(y,h_b(x_0,x_1)\} &= 0.5 \  \int_{-\infty}^{+\infty} \int_{-\infty}^{+\infty}\frac{1}{2\pi}\ e^{-\frac{1}{8}(x_0^2 + 16x_1^2)} \textbf{1}(\hat{y} \ne 1) + \frac{1}{2\pi}\ e^{-\frac{1}{2}(x_0^2 + x_1^2)} \textbf{1}(\hat{y} \ne -\ 1) dx_0 dx_1 \\
+    &= \frac{1}{4\pi} \int_{-\infty}^{+\infty} \int_{-\infty}^{+\infty} e^{-\frac{1}{8}(x_0^2 + 16x_1^2)} \textbf{1}(\hat{y} \ne 1) + e^{-\frac{1}{2}(x_0^2 + x_1^2)} \textbf{1}(\hat{y} \ne -\ 1) dx_0 dx_1
+    
+\end{aligned}
+\label{Eq:residualerrorstep1}
 \end{equation}
 
 
-The loss function  is some function computing the difference between the estimated and true values for a sample. For a classifier, it is simply checking if the predicated class label $\hat{y}$ matches the real class $y$.
-The zero-one loss function $L(\hat{y}, y)$ is equal to 0 if the two match, 1 otherwise. Formally,
+\subsubsection{Discussion about modifying certain parameters of the Bayes model}
+Pluggin the new values into
 
-$$L(\hat{y}, y) = \boldsymbol{I}(\hat{y} \ne y), $$
-Let \textit{D} be a probability distribution on $\mathcal{X}$ and let $ S =((x_0^{(0)},x_1^{(0)}), \dots, (x_0^{(n)},x_1^{(n)}))$ be a training sample containing $n$ labeled examples drawn i.i.d from D.
-
-Let's say we learn the classifier on S and observe its trainign error using the zero-one loss:
-$$   Err_{S}^{0-1}} = \frac{1}{n}\ \sum_{i=1}^{n} \boldsymbol{I}(h_b(x_0^{(i)}, x_1^{(i)}) \ne y) $$
-
-The generalization error of the
-models is the error that would result if we trained an algorithm on several different training samples S :
-$$   Err_{D}^{0-1}} = \boldsymbol{E}_{x_0, x_1,y}\ [\boldsymbol{I}(y \ne h_b(x_0^{(i)}, x_1^{(i)})] $$
-
+\subsection{Bias and variance in regression}
 \end{document}
