@@ -4,7 +4,7 @@ from matplotlib.colors import ListedColormap
 
 def myplot(xminus, yminus, xplus, yplus, title, xlim = 5, ylim = 5):
     fig = plt.figure()
-    ax1 = fig.add_subplot(111)
+    ax = fig.add_subplot(111)
     axes = plt.gca()
     cm_bright = ListedColormap(['#FF0000', '#0000FF'])
     axes.set_xlim([-xlim,ylim])
@@ -13,6 +13,7 @@ def myplot(xminus, yminus, xplus, yplus, title, xlim = 5, ylim = 5):
     plt.ylabel("X_1")
     plt.scatter(xminus, yminus, c='r', cmap=cm_bright)
     plt.scatter(xplus, yplus, c='b', cmap=cm_bright)
+    ax.legend(["y = - 1", "y = + 1"])
     plt.savefig("{}.svg".format(title))
     plt.show()
 
