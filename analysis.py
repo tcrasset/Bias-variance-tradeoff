@@ -69,7 +69,6 @@ def compute_quantities(x, mean, var, nb_ls, nb_points, model_type, n_neighbors=N
     expected_errors = []
 
     for x_zero in x:
-        # print(x_zero)
         residual_error = get_residual_error(mean, var, nb_ls, x_zero)
         residual_errors.append(residual_error)
         squared_bias.append(get_squared_bias(models, x_zero))
@@ -82,7 +81,7 @@ def mean_quantities(x, mean, var, nb_ls, nb_points, model_type, n_neighbors=None
    return [np.mean(quantity) for quantity in quantities]
 
 def change_LS_size(x, mean, var, nb_ls, model_type, n_neighbors=None):
-    size_LS = range(10,100)
+    size_LS = range(10,100,2)
     mean_residual_list = []
     mean_squared_bias_list = []
     mean_variances_list= []
@@ -106,7 +105,7 @@ def change_LS_size(x, mean, var, nb_ls, model_type, n_neighbors=None):
             mean_expected_list
 
 def change_complexity(x, mean, var, nb_ls, nb_points, model_type):
-    complexity = range(1, 125,1)
+    complexity = range(1, 10,1)
     mean_residual_list = []
     mean_squared_bias_list = []
     mean_variances_list= []
@@ -130,7 +129,7 @@ def change_complexity(x, mean, var, nb_ls, nb_points, model_type):
             mean_expected_list
 
 def change_var(x, mean, nb_ls, nb_points, model_type, n_neighbors=None):
-    variance = range(0.001,1,0.01)
+    variance = np.arange(0.001,1,0.01)
     mean_residual_list = []
     mean_squared_bias_list = []
     mean_variances_list= []
@@ -146,71 +145,124 @@ def change_var(x, mean, nb_ls, nb_points, model_type, n_neighbors=None):
         mean_squared_bias_list.append(mean_squared_bias)
         mean_variances_list.append(mean_variances)
         mean_expected_list.append(mean_expected_errors)
-        print(nb_points)
+        print(var)
+
     return variance, \
             mean_residual_list, \
             mean_squared_bias_list, \
             mean_variances_list, \
             mean_expected_list
 
-def draw_plot(title,x , xlabel,y , ylabel, filename = None):
+def draw_plot(x , xlabel,
+                y1 , ylabel1,
+                y2 , ylabel2,
+                y3 , ylabel3,
+                y4 , ylabel4,
+                filename = None):
     plt.figure()
-    plt.title(title)
     plt.xlabel(xlabel)
-    plt.plot(x,y, label=ylabel)
+    plt.plot(x,y1, label=ylabel1)
+    plt.plot(x,y2, label=ylabel2)
+    plt.plot(x,y3, label=ylabel3)
+    plt.plot(x,y4, label=ylabel4)
 
     plt.legend(loc='upper right')
 
-    #plt.savefig(filename)
+    plt.savefig(filename)
     plt.show()
     plt.close()
 
 if __name__ == "__main__":
     mean = 0
     var = 0.01
-    nb_ls = 1
-    nb_points = 1000
-    x = np.arange(-4, 4, 0.01)
+    nb_ls = 3
+    nb_points = 100
+    x = np.arange(-4, 4, 0.01) #Test set
 
 
     # residual_errors, \
     # squared_bias, \
     # variances, \
     # expected_errors = compute_quantities(x, mean, var, nb_ls, nb_points, "LNR")
-
-    # draw_plot("Residual error", x, "x", residual_errors, "residual_errors")
-    # draw_plot("Squared bias", x, "x", squared_bias, "squared_bias")
-    # draw_plot("Variances", x, "x", variances, "variances")
-    # draw_plot("Expected error", x, "x", expected_errors, "expected_errors")
+    # draw_plot(x, "x",
+    #     residual_errors, "Residual error",
+    #     squared_bias, "Squared bias",
+    #     variances, "Variances",
+    #     expected_errors,"Expected error",
+    #     "LNRerror.svg")
     
     # residual_errors, \
     # squared_bias, \
     # variances, \
     # expected_errors = compute_quantities(x, mean, var, nb_ls, nb_points, "KNR",5)
-    # draw_plot("Residual error", x, "x", residual_errors, "residual_errors")
-    # draw_plot("Squared bias", x, "x", squared_bias, "squared_bias")
-    # draw_plot("Variances", x, "x", variances, "variances")
-    # draw_plot("Expected error", x, "x", expected_errors, "expected_errors")
+    # draw_plot(x, "x",
+    #         residual_errors, "Residual error",
+    #         squared_bias, "Squared bias",
+    #         variances, "Variances",
+    #         expected_errors,"Expected error",
+    #         "KNRerror.svg")
  
  
     size_LS, \
     residual_errors, \
     squared_bias, \
     variances, \
-    expected_errors = change_LS_size(x, mean, var, 3, nb_points, "LNR")
-    draw_plot("Residual error", size_LS, "size_LS", residual_errors, "residual_errors")
-    draw_plot("Squared bias", size_LS, "size_LS", squared_bias, "squared_bias")
-    draw_plot("Variances", size_LS, "size_LS", variances, "variances")
-    draw_plot("Expected error", size_LS, "size_LS", expected_errors, "expected_errors")
+    expected_errors = change_LS_size(x, mean, var, nb_ls, "LNR")
+    draw_plot(size_LS,"Size of learning set",
+                residual_errors, "mean residual error",
+                squared_bias, "mean squared bias",
+                variances, "mean variances",
+                expected_errors,"mean expected error",
+                "changeLSsizeerrorLNR.svg")
 
-    # complexity, \
-    # residual_errors, \
-    # squared_bias, \
-    # variances, \
-    # expected_errors = change_complexity(x, mean, var, 3, nb_points, "KNR")
-    # draw_plot("Residual error", complexity, "complexity", residual_errors, "residual_errors")
-    # draw_plot("Squared bias", complexity, "complexity", squared_bias, "squared_bias")
-    # draw_plot("Variances", complexity, "complexity", variances, "variances")
-    # draw_plot("Expected error", complexity, "complexity", expected_errors, "expected_errors")
+    size_LS, \
+    residual_errors, \
+    squared_bias, \
+    variances, \
+    expected_errors = change_LS_size(x, mean, var, nb_ls, "KNR", 5)
+    draw_plot(size_LS,"Size of learning set",
+                residual_errors, "mean residual error",
+                squared_bias, "mean squared bias",
+                variances, "mean variances",
+                expected_errors,"mean expected error",
+                "changeLSsizeerrorKNR.svg")
 
+
+
+    complexity, \
+    residual_errors, \
+    squared_bias, \
+    variances, \
+    expected_errors = change_complexity(x, mean, var, nb_ls, nb_points, "KNR")
+    draw_plot(complexity, "Complexity of the algorithm",
+                residual_errors, "mean residual error",
+                squared_bias, "mean squared bias",
+                variances, "mean variances",
+                expected_errors,"mean expected error",
+                "changeneighborserror.svg")
+
+    complexity, \
+    residual_errors, \
+    squared_bias, \
+    variances, \
+    expected_errors = change_var(x, mean, nb_ls, nb_points, "LNR")
+    draw_plot(complexity, "Complexity of the algorithm",
+                residual_errors, "mean residual error",
+                squared_bias, "mean squared bias",
+                variances, "mean variances",
+                expected_errors,"mean expected error",
+                "changevarerrorLNR.svg")
+
+    complexity, \
+    residual_errors, \
+    squared_bias, \
+    variances, \
+    expected_errors = change_var(x, mean, nb_ls, nb_points, "KNR", 5)
+    draw_plot(complexity, "Complexity of the algorithm",
+                residual_errors, "mean residual error",
+                squared_bias, "mean squared bias",
+                variances, "mean variances",
+                expected_errors,"mean expected error",
+                "changevarerrorKNR.svg")
+                
 
